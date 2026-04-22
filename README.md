@@ -71,12 +71,16 @@ movie-recommender/
 
 ## ⚡ Parallel Computing Results
 
-| Workers | Time (s) | Speedup |
+| Method | Time (s) | Speedup |
 |---|---|---|
-| Serial | ~180s | 1.0x |
-| 2 workers | ~95s | ~1.9x |
-| 4 workers | ~52s | ~3.4x |
-| 8 workers | ~35s | ~5.1x |
+| Serial (baseline) | 4.06s | 1.00x |
+| 2 workers | 1.15s | 3.51x |
+| 4 workers | 2.13s | 1.90x |
+| 8 workers | 4.67s | 0.87x |
+
+> Best speedup achieved with 2 workers (3.51x faster than serial).
+> Beyond 2 workers, process spawning overhead on Windows dominates,
+> demonstrating Amdahl's Law in practice.
 
 ---
 
