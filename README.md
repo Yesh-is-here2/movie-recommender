@@ -99,8 +99,8 @@ movie-recommender/
 
 | Role | Username | Password |
 |---|---|---|
-| Admin | `admin` | `admin123` |
-| Owner | `owner` | `owner123` |
+| Admin | `admin` | `XXXXXXXX` |
+| Owner | `owner` | `XXXXXXXX` |
 | User | Register via UI | — |
 
 ---
