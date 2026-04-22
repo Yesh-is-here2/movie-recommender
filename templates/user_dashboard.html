@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CineAI — Dashboard</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0d0d1a; color: #fff; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+  nav { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; z-index: 100; }
+  nav h1 { font-size: 1.4rem; background: linear-gradient(90deg, #f953c6, #b91d73); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  nav .user-info { display: flex; align-items: center; gap: 16px; }
+  nav .user-info span { color: #aaa; font-size: 0.9rem; }
+  .logout-btn { padding: 8px 16px; background: rgba(255,50,50,0.2); border: 1px solid rgba(255,50,50,0.3); border-radius: 8px; color: #ff6b6b; cursor: pointer; text-decoration: none; font-size: 0.85rem; }
+  .main { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+  .search-section { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 28px; margin-bottom: 32px; }
+  .search-section h2 { font-size: 1.2rem; margin-bottom: 20px; color: #f953c6; }
+  .search-bar { display: flex; gap: 12px; margin-bottom: 16px; }
+  .search-bar input { flex: 1; padding: 13px 18px; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 0.95rem; outline: none; }
+  .search-bar input:focus { border-color: #f953c6; }
+  .btn { padding: 13px 24px; border: none; border-radius: 10px; cursor: pointer; font-size: 0.95rem; font-weight: 600; transition: all 0.3s; }
+  .btn-primary { background: linear-gradient(90deg, #f953c6, #b91d73); color: #fff; }
+  .btn-selfie { background: linear-gradient(90deg, #4facfe, #00f2fe); color: #000; }
+  .btn-selfie:hover, .btn-primary:hover { opacity: 0.85; transform: translateY(-1px); }
+  .selfie-section { display: none; margin-top: 20px; text-align: center; }
+  .selfie-section video { border-radius: 12px; border: 2px solid #4facfe; width: 320px; transform: scaleX(-1); }
+  .selfie-section canvas { display: none; }
+  .emotion-badge { display: inline-block; padding: 8px 20px; border-radius: 20px; background: linear-gradient(90deg, #4facfe, #00f2fe); color: #000; font-weight: 700; margin: 12px 0; font-size: 1rem; }
+  .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; margin-top: 24px; }
+  .movie-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; transition: transform 0.3s; }
+  .movie-card:hover { transform: translateY(-4px); border-color: #f953c6; }
+  .movie-card img { width: 100%; height: 280px; object-fit: cover; }
+  .movie-card .no-poster { width: 100%; height: 280px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 3rem; }
+  .movie-card-body { padding: 14px; }
+  .movie-card-body h3 { font-size: 0.9rem; margin-bottom: 8px; line-height: 1.3; }
+  .movie-card-body .score { font-size: 0.8rem; color: #f953c6; margin-bottom: 10px; }
+  .movie-card-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .tag-btn { padding: 4px 10px; border-radius: 20px; border: 1px solid; font-size: 0.72rem; cursor: pointer; background: transparent; transition: all 0.2s; }
+  .tag-btn.cast { border-color: #f953c6; color: #f953c6; }
+  .tag-btn.similar { border-color: #4facfe; color: #4facfe; }
+  .tag-btn.cast:hover { background: #f953c6; color: #fff; }
+  .tag-btn.similar:hover { background: #4facfe; color: #000; }
+  .loading { text-align: center; padding: 40px; color: #aaa; display: none; }
+  .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.1); border-top-color: #f953c6; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.active { display: flex; }
+  .modal { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 28px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; position: relative; }
+  .modal-close { position: absolute; top: 16px; right: 16px; background: none; border: none; color: #aaa; font-size: 1.4rem; cursor: pointer; }
+  .modal h2 { font-size: 1.2rem; margin-bottom: 20px; color: #f953c6; }
+  .cast-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 16px; }
+  .cast-card { text-align: center; cursor: pointer; padding: 8px; border-radius: 8px; transition: background 0.2s; }
+  .cast-card:hover { background: rgba(255,255,255,0.05); }
+  .cast-card img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 2px solid #f953c6; }
+  .cast-card .no-photo { width: 80px; height: 80px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-size: 2rem; margin: 0 auto; }
+  .cast-card p { font-size: 0.78rem; margin-top: 6px; color: #ddd; }
+  .cast-card span { font-size: 0.7rem; color: #aaa; }
+  .similar-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
+  .similar-card img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; }
+  .similar-card p { font-size: 0.8rem; margin-top: 6px; color: #ddd; text-align: center; }
+</style>
+</head>
+<body>
+
+<nav>
+  <h1>🎬 CineAI</h1>
+  <div class="user-info">
+    <span>👤 {{ user.username }}</span>
+    <a href="/logout" class="logout-btn">Logout</a>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="search-section">
+    <h2>🎯 Find Movies You'll Love</h2>
+    <div class="search-bar">
+      <input type="text" id="movieInput" placeholder="Enter a movie you like (e.g. Inception, Titanic...)">
+      <button class="btn btn-primary" onclick="searchMovies()">🔍 Search</button>
+      <button class="btn btn-selfie" onclick="toggleSelfie()">🤳 SelfieSearch</button>
+    </div>
+    <div class="selfie-section" id="selfieSection">
+      <p style="color:#aaa; margin-bottom:12px;">Look at the camera — we'll detect your mood and suggest movies!</p>
+      <video id="video" autoplay playsinline></video>
+      <canvas id="canvas"></canvas>
+      <br>
+      <button class="btn btn-selfie" style="margin-top:12px;" onclick="captureAndAnalyze()">📸 Capture & Analyze Mood</button>
+      <div id="emotionResult" style="margin-top:12px;"></div>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Finding the best movies for you...</p>
+  </div>
+
+  <div class="results-grid" id="resultsGrid"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <h2 id="modalTitle"></h2>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+let stream = null;
+window._movies = [];
+
+async function searchMovies() {
+  const title = document.getElementById('movieInput').value.trim();
+  if (!title) return;
+  showLoading(true);
+  try {
+    const res = await fetch('/recommend', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({title, top_n: 10})
+    });
+    const data = await res.json();
+    showLoading(false);
+    renderMovies(data.recommendations || []);
+  } catch(err) {
+    showLoading(false);
+    console.error(err);
+  }
+}
+
+async function toggleSelfie() {
+  const section = document.getElementById('selfieSection');
+  const video = document.getElementById('video');
+  if (section.style.display === 'block') {
+    section.style.display = 'none';
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+    return;
+  }
+  section.style.display = 'block';
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({video: {width: 640, height: 480}});
+    video.srcObject = stream;
+  } catch(err) {
+    alert('Camera access denied. Please allow camera access and try again.');
+  }
+}
+
+async function captureAndAnalyze() {
+  const video = document.getElementById('video');
+  const canvas = document.getElementById('canvas');
+  canvas.width = 640;
+  canvas.height = 480;
+  const ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.scale(-1, 1);
+  ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+  ctx.restore();
+  const imageBase64 = canvas.toDataURL('image/jpeg', 0.95);
+  document.getElementById('emotionResult').innerHTML = '<p style="color:#4facfe">📸 Photo captured! Analyzing your mood...</p>';
+  showLoading(true);
+  try {
+    const res = await fetch('/selfie-search', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({image: imageBase64})
+    });
+    const data = await res.json();
+    showLoading(false);
+    const emotionEmojis = {
+      happy: '😄', sad: '😢', angry: '😠', fear: '😨',
+      surprise: '😲', disgust: '🤢', neutral: '😐'
+    };
+    const emoji = emotionEmojis[data.emotion] || '🎭';
+    document.getElementById('emotionResult').innerHTML = `
+      <div class="emotion-badge">${emoji} Detected: ${data.emotion}</div>
+      <p style="color:#ccc; margin-top:8px;">${data.message}</p>
+    `;
+    renderMovies(data.recommendations || []);
+  } catch(err) {
+    showLoading(false);
+    document.getElementById('emotionResult').innerHTML = '<p style="color:#ff6b6b">❌ Error analyzing. Try again.</p>';
+    console.error(err);
+  }
+}
+
+function renderMovies(movies) {
+  window._movies = movies;
+  const grid = document.getElementById('resultsGrid');
+  if (!movies.length) {
+    grid.innerHTML = '<p style="color:#aaa; text-align:center; grid-column:1/-1;">No results found. Try a different movie title.</p>';
+    return;
+  }
+  grid.innerHTML = movies.map((m, index) => `
+    <div class="movie-card">
+      ${m.poster ? `<img src="${m.poster}" alt="${m.title}" loading="lazy">` : `<div class="no-poster">🎬</div>`}
+      <div class="movie-card-body">
+        <h3>${m.title}</h3>
+        <div class="score">⭐ Match: ${(m.score * 100).toFixed(1)}%</div>
+        <div class="movie-card-actions">
+          ${m.cast && m.cast.length ? `<button class="tag-btn cast" onclick="showCast(${index})">🎭 Cast</button>` : ''}
+          ${m.similar && m.similar.length ? `<button class="tag-btn similar" onclick="showSimilar(${index})">🎬 Similar</button>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function showCast(index) {
+  const movie = window._movies[index];
+  if (!movie) return;
+  document.getElementById('modalTitle').textContent = `🎭 Cast — ${movie.title}`;
+  document.getElementById('modalContent').innerHTML = `
+    <div class="cast-grid">
+      ${movie.cast.map(c => `
+        <div class="cast-card" onclick="showActorDetails(${c.id}, '${c.name.replace(/'/g, "\\'").replace(/"/g, '\\"')}')">
+          ${c.photo ? `<img src="${c.photo}" alt="${c.name}">` : `<div class="no-photo">👤</div>`}
+          <p>${c.name}</p>
+          <span>${c.character}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+function showSimilar(index) {
+  const movie = window._movies[index];
+  if (!movie) return;
+  document.getElementById('modalTitle').textContent = `🎬 Similar to ${movie.title}`;
+  document.getElementById('modalContent').innerHTML = `
+    <div class="similar-grid">
+      ${movie.similar.map(s => `
+        <div class="similar-card">
+          ${s.poster ? `<img src="${s.poster}" alt="${s.title}">` : `<div style="height:180px;background:rgba(255,255,255,0.05);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:2rem;">🎬</div>`}
+          <p>${s.title}</p>
+        </div>
+      `).join('')}
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+
+async function showActorDetails(actorId, name) {
+  document.getElementById('modalTitle').textContent = `👤 ${name}`;
+  document.getElementById('modalContent').innerHTML = '<p style="color:#aaa">Loading...</p>';
+  document.getElementById('modalOverlay').classList.add('active');
+  try {
+    const res = await fetch(`/actor/${actorId}`);
+    const data = await res.json();
+    document.getElementById('modalContent').innerHTML = `
+      <div style="display:flex;gap:20px;margin-bottom:20px;flex-wrap:wrap;align-items:flex-start;">
+        ${data.photo ? `<img src="${data.photo}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:2px solid #f953c6;flex-shrink:0;">` : ''}
+        <p style="color:#ccc;font-size:0.85rem;line-height:1.6;">${data.bio || 'No bio available.'}</p>
+      </div>
+      ${data.upcoming && data.upcoming.length ? `
+        <h3 style="color:#f953c6;margin-bottom:12px;">🎬 Upcoming Movies</h3>
+        <div class="similar-grid">
+          ${data.upcoming.map(m => `
+            <div class="similar-card">
+              ${m.poster ? `<img src="${m.poster}" alt="${m.title}">` : `<div style="height:180px;background:rgba(255,255,255,0.05);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:2rem;">🎬</div>`}
+              <p>${m.title}</p>
+              <span style="font-size:0.75rem;color:#aaa;">${m.release_date}</span>
+            </div>
+          `).join('')}
+        </div>
+      ` : '<p style="color:#aaa;margin-top:12px;">No upcoming movies found.</p>'}
+    `;
+  } catch(err) {
+    document.getElementById('modalContent').innerHTML = '<p style="color:#ff6b6b">Failed to load actor details.</p>';
+  }
+}
+
+function showLoading(show) {
+  document.getElementById('loading').style.display = show ? 'block' : 'none';
+  if (show) document.getElementById('resultsGrid').innerHTML = '';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modalOverlay').classList.remove('active');
+}
+
+document.getElementById('movieInput').addEventListener('keypress', e => {
+  if (e.key === 'Enter') searchMovies();
+});
+</script>
+</body>
+</html>
