@@ -7,3 +7,8 @@ __pycache__/
 data/ml-latest-small.zip
 data/ml-latest-small/
 
+data/ml-1m/
+data/ml-1m.zip
+data/ratings.csv
+data/movies.csv
+
