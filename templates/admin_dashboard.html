@@ -4,28 +4,50 @@
 <meta charset="UTF-8">
 <title>CineAI — Admin</title>
 <style>
+  /* Reset default browser margins and padding */
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* Dark background theme for the entire page */
   body { background: #0d0d1a; color: #fff; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  /* Top navigation bar — semi-transparent with blur effect */
   nav { background: rgba(255,255,255,0.05); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.1); }
   nav h1 { font-size: 1.4rem; color: #4facfe; }
+
+  /* Red logout button in top right corner */
   .logout-btn { padding: 8px 16px; background: rgba(255,50,50,0.2); border: 1px solid rgba(255,50,50,0.3); border-radius: 8px; color: #ff6b6b; cursor: pointer; text-decoration: none; font-size: 0.85rem; }
+
+  /* Main content area — centered with max width */
   .main { max-width: 1200px; margin: 0 auto; padding: 32px 20px; }
+
+  /* Stats cards row — auto-fit grid so it's responsive on smaller screens */
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; }
+
+  /* Individual stat card — shows a single number metric */
   .stat-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 24px; text-align: center; }
   .stat-card .num { font-size: 2.5rem; font-weight: 700; color: #4facfe; }
   .stat-card .label { color: #aaa; font-size: 0.85rem; margin-top: 6px; }
+
+  /* Section containers for users table and activity log */
   .section { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 16px; padding: 24px; margin-bottom: 24px; }
   .section h2 { font-size: 1.1rem; color: #4facfe; margin-bottom: 20px; }
+
+  /* Full-width table styling */
   table { width: 100%; border-collapse: collapse; }
   th { text-align: left; padding: 10px 14px; color: #aaa; font-size: 0.8rem; border-bottom: 1px solid rgba(255,255,255,0.08); }
   td { padding: 10px 14px; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+
+  /* Role badges — color coded by role type */
   .badge { padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
-  .badge.user { background: rgba(79,172,254,0.2); color: #4facfe; }
-  .badge.admin { background: rgba(249,83,198,0.2); color: #f953c6; }
-  .badge.owner { background: rgba(255,215,0,0.2); color: gold; }
+  .badge.user { background: rgba(79,172,254,0.2); color: #4facfe; }   /* Blue for regular users */
+  .badge.admin { background: rgba(249,83,198,0.2); color: #f953c6; }  /* Pink for admins */
+  .badge.owner { background: rgba(255,215,0,0.2); color: gold; }      /* Gold for owner */
 </style>
 </head>
 <body>
+
+<!-- Top navigation bar — shows admin title and logout button -->
+<!-- user.username is injected by Jinja2 template engine from the server -->
 <nav>
   <h1>🛡️ Admin Dashboard</h1>
   <div style="display:flex;align-items:center;gap:16px;">
@@ -35,38 +57,51 @@
 </nav>
 
 <div class="main">
+
+  <!-- Stats row — numbers are filled in by JavaScript after the API call -->
   <div class="stats" id="stats">
     <div class="stat-card"><div class="num" id="totalUsers">—</div><div class="label">Total Users</div></div>
     <div class="stat-card"><div class="num" id="totalSearches">—</div><div class="label">Total Searches</div></div>
     <div class="stat-card"><div class="num" id="totalSelfie">—</div><div class="label">Selfie Searches</div></div>
   </div>
 
+  <!-- All Users table — populated dynamically from /admin/users API -->
   <div class="section">
     <h2>👥 All Users</h2>
     <table>
       <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Joined</th></tr></thead>
-      <tbody id="usersTable"></tbody>
+      <tbody id="usersTable"></tbody> <!-- Rows injected by JavaScript -->
     </table>
   </div>
 
+  <!-- Recent Activity table — shows last 50 user actions -->
   <div class="section">
     <h2>📋 Recent Activity</h2>
     <table>
       <thead><tr><th>User</th><th>Action</th><th>Details</th><th>Time</th></tr></thead>
-      <tbody id="logsTable"></tbody>
+      <tbody id="logsTable"></tbody> <!-- Rows injected by JavaScript -->
     </table>
   </div>
+
 </div>
 
 <script>
+// Load all admin data when the page first opens
+// Calls the /admin/users API endpoint which returns users and activity logs
 async function loadData() {
   const res = await fetch('/admin/users');
   const data = await res.json();
 
+  // Count stats by filtering the returned arrays
+  // Only count users with role === 'user' (excludes admins and owners)
   document.getElementById('totalUsers').textContent = data.users.filter(u => u.role === 'user').length;
+
+  // Count recommendation searches and selfie searches separately
   document.getElementById('totalSearches').textContent = data.logs.filter(l => l.action === 'recommendation').length;
   document.getElementById('totalSelfie').textContent = data.logs.filter(l => l.action === 'selfie_search').length;
 
+  // Build the users table rows dynamically from API data
+  // Each user gets a color-coded role badge
   document.getElementById('usersTable').innerHTML = data.users.map(u => `
     <tr>
       <td>${u.username}</td>
@@ -76,6 +111,7 @@ async function loadData() {
     </tr>
   `).join('');
 
+  // Build the activity log table rows dynamically
   document.getElementById('logsTable').innerHTML = data.logs.map(l => `
     <tr>
       <td>${l.username}</td>
@@ -85,6 +121,8 @@ async function loadData() {
     </tr>
   `).join('');
 }
+
+// Call loadData immediately when page loads
 loadData();
 </script>
 </body>
