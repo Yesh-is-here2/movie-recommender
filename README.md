@@ -154,12 +154,8 @@ Open 👉 http://localhost:8000
 ## 📊 Evaluation
 
 Run serial vs parallel comparison:
-```python
-from src.preprocess import build_matrix
-from src.similarity_parallel import run_evaluation
-
-matrix, movies_df = build_matrix()
-run_evaluation(matrix)
+```
+python evaluate.py
 ```
 
 Results saved to `results/evaluation_summary.csv`
