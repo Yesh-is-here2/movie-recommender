@@ -3,73 +3,294 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Movie Recommender — Login</title>
+<title>CineAI — Login</title>
+<!-- Orbitron: futuristic display font for headings and labels -->
+<!-- Rajdhani: clean sci-fi body font for inputs and text -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600&display=swap" rel="stylesheet">
 <style>
-  /* Reset default browser margins and padding on all elements */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  /* Full-screen centered layout with dark purple gradient background */
-  body {
-    min-height: 100vh;
-    background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Segoe UI', sans-serif; color: #fff;
+  /* ── CSS Variables ── shared color tokens used throughout the page */
+  :root {
+    --cyan: #00f5ff;      /* Primary accent — neon cyan glow */
+    --pink: #ff006e;      /* Secondary accent — hot pink */
+    --purple: #8b00ff;    /* Tertiary accent — deep purple */
+    --dark: #020714;      /* Background — near-black deep space */
+    --glass: rgba(255,255,255,0.04);          /* Glass panel fill */
+    --glass-border: rgba(0,245,255,0.15);     /* Glass panel border */
   }
 
-  /* Centered container with max width for the login card */
-  .container { width: 100%; max-width: 420px; padding: 20px; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-  /* Logo area at the top — app name and tagline */
-  .logo { text-align: center; margin-bottom: 30px; }
+  /* Full-screen centered layout with dark space background */
+  body {
+    min-height: 100vh;
+    background: var(--dark);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Rajdhani', sans-serif;
+    overflow: hidden;
+    position: relative;
+  }
 
-  /* Pink gradient text effect for the CineAI logo */
-  .logo h1 { font-size: 2rem; background: linear-gradient(90deg, #f953c6, #b91d73); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .logo p { color: #aaa; font-size: 0.9rem; margin-top: 5px; }
+  /* ── Animated perspective grid background ──
+     Creates the illusion of a receding floor grid like a sci-fi hologram */
+  .grid-bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      linear-gradient(rgba(0,245,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,245,255,0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    animation: gridMove 20s linear infinite;
+  }
+  /* Perspective tilt makes the grid look like it recedes into the distance */
+  @keyframes gridMove {
+    0% { transform: perspective(500px) rotateX(20deg) translateY(0); }
+    100% { transform: perspective(500px) rotateX(20deg) translateY(50px); }
+  }
 
-  /* Glass-morphism card effect — frosted glass look */
-  .card { background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 32px; }
+  /* ── Glowing orbs ──
+     Blurred colored circles that float behind the card for atmospheric depth */
+  .orb {
+    position: fixed; border-radius: 50%;
+    filter: blur(80px); opacity: 0.25; z-index: 0;
+    animation: orbFloat 8s ease-in-out infinite;
+  }
+  .orb-1 { width: 500px; height: 500px; background: var(--cyan); top: -200px; left: -150px; animation-delay: 0s; }
+  .orb-2 { width: 400px; height: 400px; background: var(--pink); bottom: -150px; right: -100px; animation-delay: -4s; }
+  .orb-3 { width: 300px; height: 300px; background: var(--purple); top: 50%; left: 50%; transform: translate(-50%,-50%); animation-delay: -2s; }
+  /* Gentle float animation — each orb starts at different delay for variety */
+  @keyframes orbFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-30px) scale(1.1); }
+  }
 
-  /* Tab bar for switching between Login and Register forms */
-  .tabs { display: flex; margin-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-  .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: #aaa; font-size: 0.95rem; transition: all 0.3s; }
+  /* ── CRT scanlines overlay ──
+     Thin repeating horizontal lines that simulate an old monitor effect */
+  .scanlines {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+  }
 
-  /* Active tab highlighted in pink with underline */
-  .tab.active { color: #f953c6; border-bottom: 2px solid #f953c6; }
+  /* Main content container — slides up on page load */
+  .container {
+    position: relative; z-index: 10;
+    width: 100%; max-width: 440px;
+    padding: 20px;
+    animation: fadeIn 0.8s ease forwards;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
 
-  /* Individual form field group — label + input */
-  .form-group { margin-bottom: 18px; }
-  label { display: block; font-size: 0.85rem; color: #aaa; margin-bottom: 6px; }
+  /* ── Logo section ── */
+  .logo { text-align: center; margin-bottom: 32px; }
 
-  /* Input fields — semi-transparent dark background */
-  input { width: 100%; padding: 12px 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: #fff; font-size: 0.95rem; outline: none; transition: border 0.3s; }
+  /* Movie clapper emoji pulses with a cyan glow */
+  .logo-icon {
+    font-size: 3rem; display: block; margin-bottom: 8px;
+    animation: iconPulse 2s ease-in-out infinite;
+  }
+  @keyframes iconPulse {
+    0%, 100% { filter: drop-shadow(0 0 10px var(--cyan)); }
+    50% { filter: drop-shadow(0 0 25px var(--cyan)) drop-shadow(0 0 50px var(--cyan)); }
+  }
 
-  /* Pink border glow when input is focused */
-  input:focus { border-color: #f953c6; }
+  /* CINEAI title — gradient text using cyan → purple → pink */
+  .logo h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.8rem; font-weight: 900;
+    letter-spacing: 8px;
+    background: linear-gradient(135deg, var(--cyan), var(--purple), var(--pink));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .logo p {
+    font-size: 0.85rem; color: rgba(0,245,255,0.5);
+    letter-spacing: 4px; text-transform: uppercase; margin-top: 6px;
+    font-family: 'Orbitron', monospace;
+  }
 
-  /* Submit button — full width pink gradient */
-  .btn { width: 100%; padding: 13px; background: linear-gradient(90deg, #f953c6, #b91d73); border: none; border-radius: 10px; color: #fff; font-size: 1rem; font-weight: 600; cursor: pointer; transition: opacity 0.3s; margin-top: 8px; }
-  .btn:hover { opacity: 0.9; }
+  /* ── Glass card ──
+     Frosted glass panel using backdrop-filter blur */
+  .card {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 36px;
+    position: relative;
+    overflow: hidden;
+  }
 
-  /* Success/error message box shown after login or register attempt */
-  .msg { text-align: center; margin-top: 14px; font-size: 0.9rem; padding: 10px; border-radius: 8px; display: none; }
-  .msg.error { background: rgba(255,50,50,0.15); color: #ff6b6b; display: block; }
-  .msg.success { background: rgba(50,255,100,0.15); color: #6bffaa; display: block; }
+  /* Animated scan line sweeps across the top of the card */
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: -100%;
+    width: 100%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    animation: scanLine 3s ease-in-out infinite;
+  }
+  @keyframes scanLine {
+    0% { left: -100%; }
+    100% { left: 100%; }
+  }
+
+  /* Subtle inner gradient overlay for depth */
+  .card::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(0,245,255,0.05), transparent 50%, rgba(255,0,110,0.05));
+    pointer-events: none;
+  }
+
+  /* ── Tab switcher ── Login / Register toggle */
+  .tabs {
+    display: flex; margin-bottom: 28px;
+    background: rgba(0,0,0,0.3); border-radius: 10px;
+    padding: 4px; gap: 4px;
+  }
+  .tab {
+    flex: 1; text-align: center; padding: 10px;
+    cursor: pointer; border-radius: 8px;
+    font-family: 'Orbitron', monospace;
+    font-size: 0.7rem; letter-spacing: 2px;
+    color: rgba(255,255,255,0.3);
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+  }
+  /* Active tab gets a glowing cyan highlight */
+  .tab.active {
+    background: linear-gradient(135deg, rgba(0,245,255,0.2), rgba(139,0,255,0.2));
+    color: var(--cyan);
+    box-shadow: 0 0 15px rgba(0,245,255,0.2);
+    border: 1px solid rgba(0,245,255,0.3);
+  }
+
+  /* ── Form fields ── */
+  .form-group { margin-bottom: 20px; position: relative; }
+
+  /* Small uppercase label above each input */
+  label {
+    display: block; font-size: 0.7rem;
+    color: rgba(0,245,255,0.6);
+    letter-spacing: 3px; text-transform: uppercase;
+    margin-bottom: 8px;
+    font-family: 'Orbitron', monospace;
+  }
+
+  /* Icon positioned inside the input on the left */
+  .input-wrap { position: relative; }
+  .input-wrap .icon {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    font-size: 1rem; opacity: 0.4;
+  }
+
+  /* Dark transparent input with cyan border on focus */
+  input {
+    width: 100%; padding: 13px 16px 13px 42px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(0,245,255,0.15);
+    border-radius: 10px;
+    color: #fff; font-size: 0.95rem;
+    font-family: 'Rajdhani', sans-serif;
+    outline: none;
+    transition: all 0.3s ease;
+    letter-spacing: 1px;
+  }
+  /* Glow effect when input is focused */
+  input:focus {
+    border-color: var(--cyan);
+    box-shadow: 0 0 20px rgba(0,245,255,0.15), inset 0 0 10px rgba(0,245,255,0.05);
+    background: rgba(0,245,255,0.03);
+  }
+  input::placeholder { color: rgba(255,255,255,0.2); letter-spacing: 1px; }
+
+  /* ── Submit button ──
+     Glass background with cyan border — glows on hover */
+  .btn {
+    width: 100%; padding: 14px;
+    background: linear-gradient(135deg, rgba(0,245,255,0.15), rgba(139,0,255,0.15));
+    border: 1px solid var(--cyan);
+    border-radius: 10px; color: var(--cyan);
+    font-family: 'Orbitron', monospace;
+    font-size: 0.75rem; font-weight: 700;
+    letter-spacing: 4px; text-transform: uppercase;
+    cursor: pointer; margin-top: 8px;
+    transition: all 0.3s ease;
+    position: relative; overflow: hidden;
+  }
+  /* Full gradient fill appears on hover via opacity transition */
+  .btn::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, var(--cyan), var(--purple));
+    opacity: 0; transition: opacity 0.3s;
+  }
+  .btn:hover::before { opacity: 0.15; }
+  .btn:hover {
+    box-shadow: 0 0 30px rgba(0,245,255,0.4), 0 0 60px rgba(0,245,255,0.1);
+    transform: translateY(-2px);
+  }
+  .btn span { position: relative; z-index: 1; }
+
+  /* ── Status messages ── shown after login/register attempt */
+  .msg {
+    text-align: center; margin-top: 16px;
+    font-size: 0.85rem; padding: 10px 16px;
+    border-radius: 8px; display: none;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 1px;
+  }
+  .msg.error {
+    background: rgba(255,0,110,0.1);
+    border: 1px solid rgba(255,0,110,0.3);
+    color: #ff4d8d; display: block;
+  }
+  .msg.success {
+    background: rgba(0,245,255,0.1);
+    border: 1px solid rgba(0,245,255,0.3);
+    color: var(--cyan); display: block;
+  }
+
+  /* ── Corner bracket decorations ──
+     Four L-shaped brackets in each corner of the card for a HUD/targeting look */
+  .corner { position: absolute; width: 20px; height: 20px; }
+  .corner-tl { top: 12px; left: 12px; border-top: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+  .corner-tr { top: 12px; right: 12px; border-top: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
+  .corner-bl { bottom: 12px; left: 12px; border-bottom: 2px solid var(--cyan); border-left: 2px solid var(--cyan); }
+  .corner-br { bottom: 12px; right: 12px; border-bottom: 2px solid var(--cyan); border-right: 2px solid var(--cyan); }
 </style>
 </head>
 <body>
 
-<!-- Centered login card -->
+<!-- Animated perspective grid — gives the sci-fi floor effect -->
+<div class="grid-bg"></div>
+
+<!-- Glowing atmospheric orbs in background corners and center -->
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<!-- CRT scanlines overlay for retro-futuristic texture -->
+<div class="scanlines"></div>
+
+<!-- Main centered login card -->
 <div class="container">
 
-  <!-- App logo and tagline -->
+  <!-- Logo with pulsing glow animation -->
   <div class="logo">
-    <h1>🎬 CineAI</h1>
-    <p>Your intelligent movie companion</p>
+    <span class="logo-icon">🎬</span>
+    <h1>CINEAI</h1>
+    <p>Intelligent Movie System</p>
   </div>
 
+  <!-- Glass card with corner bracket HUD decorations -->
   <div class="card">
+    <div class="corner corner-tl"></div>
+    <div class="corner corner-tr"></div>
+    <div class="corner corner-bl"></div>
+    <div class="corner corner-br"></div>
 
-    <!-- Tab switcher — clicking a tab shows/hides the corresponding form -->
+    <!-- Tab switcher — clicking switches between login and register forms -->
     <div class="tabs">
       <div class="tab active" onclick="showTab('login')">Login</div>
       <div class="tab" onclick="showTab('register')">Register</div>
@@ -79,14 +300,19 @@
     <div id="loginForm">
       <div class="form-group">
         <label>Username</label>
-        <input type="text" id="loginUsername" placeholder="Enter username">
+        <div class="input-wrap">
+          <span class="icon">⚡</span>
+          <input type="text" id="loginUsername" placeholder="Enter username">
+        </div>
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" id="loginPassword" placeholder="Enter password">
+        <div class="input-wrap">
+          <span class="icon">🔐</span>
+          <input type="password" id="loginPassword" placeholder="Enter password">
+        </div>
       </div>
-      <button class="btn" onclick="doLogin()">Login</button>
-      <!-- Error/success message shown after login attempt -->
+      <button class="btn" onclick="doLogin()"><span>▶ Initialize Session</span></button>
       <div id="loginMsg" class="msg"></div>
     </div>
 
@@ -94,28 +320,34 @@
     <div id="registerForm" style="display:none">
       <div class="form-group">
         <label>Username</label>
-        <input type="text" id="regUsername" placeholder="Choose a username">
+        <div class="input-wrap">
+          <span class="icon">👤</span>
+          <input type="text" id="regUsername" placeholder="Choose username">
+        </div>
       </div>
       <div class="form-group">
         <label>Email</label>
-        <input type="email" id="regEmail" placeholder="Your email">
+        <div class="input-wrap">
+          <span class="icon">📡</span>
+          <input type="email" id="regEmail" placeholder="Your email">
+        </div>
       </div>
       <div class="form-group">
         <label>Password</label>
-        <input type="password" id="regPassword" placeholder="Choose a password">
+        <div class="input-wrap">
+          <span class="icon">🔐</span>
+          <input type="password" id="regPassword" placeholder="Create password">
+        </div>
       </div>
-      <button class="btn" onclick="doRegister()">Create Account</button>
-      <!-- Error/success message shown after registration attempt -->
+      <button class="btn" onclick="doRegister()"><span>▶ Create Profile</span></button>
       <div id="regMsg" class="msg"></div>
     </div>
-
   </div>
 </div>
 
 <script>
 // Switch between Login and Register tabs
-// Shows the selected form and hides the other one
-// Also updates the active styling on the tab buttons
+// Shows the selected form, hides the other, and updates active tab styling
 function showTab(tab) {
   document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
   document.getElementById('registerForm').style.display = tab === 'register' ? 'block' : 'none';
@@ -124,65 +356,52 @@ function showTab(tab) {
   });
 }
 
-// Handle login form submission
-// Sends username and password to the /login endpoint as form data
-// On success: shows success message and redirects to dashboard after 800ms
-// On failure: shows the error message returned by the server
+// Handle login — sends credentials to /login endpoint as form data
+// On success: shows green message and redirects to dashboard after 900ms
+// On failure: shows red error message from the server
 async function doLogin() {
   const username = document.getElementById('loginUsername').value;
   const password = document.getElementById('loginPassword').value;
   const msg = document.getElementById('loginMsg');
-
-  // Use FormData because the backend expects form-encoded data (not JSON)
   const formData = new FormData();
   formData.append('username', username);
   formData.append('password', password);
-
   const res = await fetch('/login', { method: 'POST', body: formData });
   const data = await res.json();
-
   if (data.error) {
-    // Show red error message if login failed
     msg.className = 'msg error';
-    msg.textContent = data.error;
+    msg.textContent = '⚠ ' + data.error;
   } else {
-    // Show green success message then redirect to dashboard
     msg.className = 'msg success';
-    msg.textContent = 'Login successful! Redirecting...';
-    setTimeout(() => window.location.href = '/dashboard', 800);
+    msg.textContent = '✓ Access Granted — Initializing...';
+    setTimeout(() => window.location.href = '/dashboard', 900);
   }
 }
 
-// Handle registration form submission
-// Sends username, email, and password to the /register endpoint
-// On success: shows confirmation and switches back to login tab after 1.5s
-// On failure: shows the error (e.g. username already taken)
+// Handle registration — sends username, email, password to /register
+// On success: shows confirmation and auto-switches to Login tab after 1.5s
 async function doRegister() {
   const username = document.getElementById('regUsername').value;
   const email = document.getElementById('regEmail').value;
   const password = document.getElementById('regPassword').value;
   const msg = document.getElementById('regMsg');
-
   const formData = new FormData();
   formData.append('username', username);
   formData.append('email', email);
   formData.append('password', password);
-
   const res = await fetch('/register', { method: 'POST', body: formData });
   const data = await res.json();
-
   if (data.error) {
     msg.className = 'msg error';
-    msg.textContent = data.error;
+    msg.textContent = '⚠ ' + data.error;
   } else {
-    // Account created — show success and redirect to login tab
     msg.className = 'msg success';
-    msg.textContent = data.message;
+    msg.textContent = '✓ Profile Created — Switch to Login';
     setTimeout(() => showTab('login'), 1500);
   }
 }
 
-// Allow pressing Enter key to trigger login without clicking the button
+// Allow pressing Enter to trigger login without clicking the button
 document.addEventListener('keypress', e => { if (e.key === 'Enter') doLogin(); });
 </script>
 </body>
