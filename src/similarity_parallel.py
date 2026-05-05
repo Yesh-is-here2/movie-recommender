@@ -85,6 +85,8 @@ def compute_parallel(matrix, n_workers=None):
 
     # Launch worker pool and distribute chunks
     # pool.map blocks until all workers are done
+    # NOTE: on Windows this MUST use 'spawn' not 'fork' — took a while to debug
+    # if you define the worker function inside another function it will crash on Windows
     with Pool(processes=n_workers) as pool:
         results = pool.map(compute_chunk, args)
 

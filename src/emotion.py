@@ -104,6 +104,8 @@ def analyze_emotion(base64_image: str) -> str:
         # Neutral tends to dominate even when the user has a clear expression.
         # If neutral wins, we look at the next strongest non-neutral emotion
         # and use that instead — this gives better movie recommendations.
+        # DeepFace was returning neutral almost every time during testing
+        # so we added this override to pick the next strongest emotion instead
         if top_emotion == "neutral":
             non_neutral = [(e, s) for e, s in sorted_emotions if e != "neutral"]
             if non_neutral:

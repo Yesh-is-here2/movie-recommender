@@ -93,6 +93,8 @@ def build_matrix(min_movie_ratings=50, min_user_ratings=50, size="small"):
 
     # Mean-center ratings per user to remove rating scale bias
     # e.g. a user who rates everything 4-5 stars vs one who uses 1-3 stars
+    # we added mean-centering after noticing recommendations were biased
+    # toward movies that everyone rates highly regardless of taste
     matrix = matrix.subtract(matrix.mean(axis=0), axis=1)
 
     # Fill NaN (unrated) with 0 after mean-centering
